@@ -14,7 +14,7 @@ class productRequest extends FormRequest
      */
 
     public function authorize()
-    // đây là phương thức cho phép người dùng thực hiện request hau không 
+    // đây là phương thức cho phép người dùng thực hiện request hay  không 
     {
         return false;
         // false là ko cho thực hiện request    

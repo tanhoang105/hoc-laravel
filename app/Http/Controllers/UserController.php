@@ -4,14 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 use App\Models\Users;
+
+use App\Http\Requests\UserRequest;
+// use file request 
 
 class UserController extends Controller
 {
     //
     private $users;
+    const _PER_PAGE = 3;
     // tạo ra hàm __Contruct để tự động tạo ra đối tượng Users() giúp chúng ta đã mất công tạo ra đối tượng user mỗi khi muốn làm việc 
     // với những method bên user model
     public function __construct()
@@ -28,6 +33,8 @@ class UserController extends Controller
 
         // $listUsers = $this->users->learQuery();
         // $listUsers = $this->users->SortTable();
+
+        // xử lý công việc lọc
         $fillters = [];
         $keyword = null;
         if(($request->status)){
@@ -55,41 +62,72 @@ class UserController extends Controller
             
             
         }
-        // dd($fillters);
+       
 
-        $listUsers = $this->users->getAllUsers($fillters ,$keyword);
+        // xử lý công việc sắp xếp
+        $sortBy = $request->input('sort-by'); 
+
+        $sortType = $request->input('sort-type');
+    
+        $allow = ['asc', 'desc'];
+        if(!empty($sortType) && in_array( $sortType , $allow)){
+            if($sortType == 'desc'){
+                $sortType = 'asc';
+            }else{
+                $sortType = 'desc';
+            }
+        }else{
+            $sortType = 'desc';
+        }
+        $sortArray = [
+            'sortBy' => $sortBy,
+            'sortType' => $sortType
+        ];
+
+
+        // khi $sortType == desc rồi thì cần gán lại cho nó là asc để khi click vào thì có thể chuyển đổi được thành asc
+        
+
+        $listUsers = $this->users->getAllUsers($fillters ,$keyword , $sortArray);
         // dd($listUsers);
 
-        return view('clients.users.list', compact('title', 'listUsers'));
+        return view('clients.users.list', compact('title', 'listUsers' , 'sortType' , self::_PER_PAGE) );
     }
 
     public function add(){
         $title = 'Thêm người dùng';
+        $groups = getAllGroup();
 
-        return view('clients.users.add' , compact('title'));
+        return view('clients.users.add' , compact('title' , 'groups'));
 
     }
 
-    public function Postadd(Request $request){
-        $request->validate(
-            [
-                'fullname' => ['required' , 'min:5'],
-                'email' => ['required' , 'email' , 'unique:users']
-            ], 
-            [
-                'fullname.required' => 'fullname bắt buộc phải nhập',
-                'fullname.min' => 'fullname ít nhất phải 5 ký tự',
-                'email.required' => 'email bắt buộc phải nhập',
-                'email.email'=> 'email bắt buộc là email',
-                'email.unique' => 'email đã tồn tại '
-            ],
-           
-          
-        );
+    public function Postadd(
+        // Request $request
+        // thực hiện validate theo cách 1
+
+        UserRequest $request
+        // thực hiện validate theo cách 2 có file request
+        
+        ){
+        
+        // đây là cách thêm của raw query
+        // $dataIsert = [
+        //      $request->fullname,
+        //      $request->email,
+        //      date('Y-m-d H:i:s' )
+        // ];
+
+
+        // đây là cách thêm của query builder
         $dataIsert = [
-             $request->fullname,
-             $request->email,
-             date('Y-m-d H:i:s' )
+            'fullname'=> $request->fullname,
+            'email' => $request->email,
+            'group_id' => $request->group_id,
+            'status' => $request->status,
+            'creat_at' => date('Y-m-d H:i:s'),
+          
+
         ];
         $this->users->addUser($dataIsert);
         return redirect(route('user.index'))->with('msg' , 'thêm người dùng thành công'); 
@@ -100,6 +138,7 @@ class UserController extends Controller
     }
 
     public function edit(Request $request,$id=0){
+        $groups = getAllGroup();
         $title = 'Cập nhập  người dùng';
         // trước khi sinh ra view thì chúng ta cần lấy đc dữ liệu user cần chỉnh sửa
         if(!empty($id)){
@@ -114,36 +153,24 @@ class UserController extends Controller
             return redirect()->route('user.index')->with('msg' , 'Người dùng không tồn tại');   
         }
         // dd($userDetail);
-        return view('clients.users.edit' , compact('title','userDetail'));
+        return view('clients.users.edit' , compact('title','userDetail' , 'groups'));
 
     }
 
-    public function Postedit(Request $request){
+    public function Postedit(UserRequest $request){
        
         $id = session('id');
         // dd($id);
         if(empty($id)){
             return back()->with('msg' , 'liên kết không tồn tại');
         }
-        $request->validate(
-            [
-                'fullname' => ['required' , 'min:5'],
-                'email' => ['required' , 'email' , 'unique:users,email,' .$id ]
-            ], 
-            [
-                'fullname.required' => 'fullname bắt buộc phải nhập',
-                'fullname.min' => 'fullname ít nhất phải 5 ký tự',
-                'email.required' => 'email bắt buộc phải nhập',
-                'email.email'=> 'email bắt buộc là email',
-                'email.unique' => 'email đã tồn tại '
-            ],
-           
-          
-        );
+        
         $dataUpdate = [
-            $request->fullname,
-             $request->email,
-             date('Y-m-d H:i:s' )
+            'fullname'=> $request->fullname,
+            'email' => $request->email,
+            'group_id' => $request->group_id,
+            'status' => $request->status,
+            'updated_at' => date('Y-m-d H:i:s'),
         ];
 
         $this->users->UpdateUser( $dataUpdate , $id);

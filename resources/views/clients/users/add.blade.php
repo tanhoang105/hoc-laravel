@@ -42,6 +42,30 @@
                    <span style="color: red">{{$message}} </span>
                @enderror
           </div>
+          <div class="mb-3">
+               <label for="">Nhóm</label>
+               <select name="group_id" class="form-control" id="">
+                    <option value=group_id value="0">Chọn nhóm</option>
+                    @if(!empty($groups))
+                         @foreach($groups as  $key=>$value)
+                              <option value="{{$value->id}}" {{old('group_id') == $value->id ? 'selected' : false}}>{{$value->name}}</option>
+                         @endforeach
+                    @endif
+               </select>
+               @error('group_id')
+                   <span style="color: red">{{$message}} </span>
+               @enderror
+          </div>
+          <div class="mb-3">
+               <label for="">Trạng Thái</label>
+               <select name="status" class="form-control" id="">
+                    <option value="0" {{old('status') == 0 ? 'selected' : false}} >Chưa kích hoạt</option>
+                    <option value="1" {{old('status') == 1 ? 'selected' : false}} >Kích hoạt</option>
+               </select>
+               {{-- @error('status')
+                   <span style="color: red">{{$message}} </span>
+               @enderror --}}
+          </div>
           <a href="users-add"><button type="submit" class="btn btn-danger">Submit</button></a>
           
           <a href="{{route('user.index')}}">Quay lại</a>

@@ -57,9 +57,15 @@
           <thead>
                <tr>
                     <th width=5%>STT</th>
-                    <th>Tên</th>
-                    <th>Email</th>
-                    <th>Thời gian</th>
+                    <th>
+                         <a href="?sort-by=fullname&sort-type={{$sortType}}">Tên</a>
+                    </th>
+                    <th>
+                         <a href="?sort-by=email&sort-type={{$sortType}}">Email</a>
+                    </th>
+                    <th>
+                         <a href="?sort-by=creat_at&sort-type={{$sortType}}">Thời gian</a>
+                    </th>
                     <th>Nhóm</th>
                     <th>Trạng thái</th>
                     <th>Sửa</th>
@@ -83,12 +89,13 @@
              
                    
                @else
-                    <tr>
-                         
+                    <tr>                   
                          <td colspan="4">Không có người dùng nào</td>
                     </tr>         
                @endif
           </tbody>
      </table>
-  
+     {{-- <div class="d-flex justify-content">
+          {{ $listUsers->links() }}       
+     </div> --}}
 @endsection
